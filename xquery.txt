@@ -1,0 +1,646 @@
+
+(: ==================== HOSPITAL.XML ==================== :)
+
+<?xml version="1.0" encoding="UTF-8"?>
+<hospitals>
+    <hospital hospitalID="H01">
+        <name>City Care Hospital</name>
+        <type>Multispecialty</type>
+        <phone>9876543210</phone>
+        <address>
+            <street>Main Road</street>
+            <pincode>600001</pincode>
+        </address>
+        <website>https://example.org</website>
+        <emergencyService>true</emergencyService>
+        <departments>
+            <department deptID="D01">
+                <name>General Medicine</name>
+                <doctorIncharge docID="DOC01"/>
+                <location>
+                    <floor>1</floor>
+                    <extension>101</extension>
+                </location>
+            </department>
+            <department deptID="D02">
+                <name>Orthopaedics</name>
+                <doctorIncharge docID="DOC02"/>
+                <location>
+                    <floor>2</floor>
+                    <extension>102</extension>
+                </location>
+            </department>
+            <department deptID="D03">
+                <name>Paediatrics</name>
+                <doctorIncharge docID="DOC03"/>
+                <location>
+                    <floor>3</floor>
+                    <extension>103</extension>
+                </location>
+            </department>
+        </departments>
+        <doctors>
+            <doctor docID="DOC01">
+                <name>
+                    <fname>Arun</fname>
+                    <lname>Kumar</lname>
+                </name>
+                <specialty>General Medicine</specialty>
+            </doctor>
+            <doctor docID="DOC02">
+                <name>
+                    <fname>Ravi</fname>
+                    <lname>Shankar</lname>
+                </name>
+                <specialty>Orthopaedics</specialty>
+            </doctor>
+            <doctor docID="DOC03">
+                <name>
+                    <fname>Priya</fname>
+                    <lname>Devi</lname>
+                </name>
+                <specialty>Paediatrics</specialty>
+            </doctor>
+        </doctors>
+    </hospital>
+
+    <hospital hospitalID="H02">
+        <name>General Health Hospital</name>
+        <type>General</type>
+        <phone>9876500000</phone>
+        <address>
+            <street>Lake Street</street>
+            <pincode>600002</pincode>
+        </address>
+        <website>https://example.com</website>
+        <emergencyService>false</emergencyService>
+        <departments/>
+        <doctors/>
+    </hospital>
+</hospitals>
+
+
+(: ==================== XPATH QUERIES ==================== :)
+
+(: 1. Display all hospital names :)
+doc('hospital.xml')//hospital/name
+
+(: 2. Display all hospital IDs :)
+doc('hospital.xml')//hospital/@hospitalID
+
+(: 3. Find hospital H01 :)
+doc('hospital.xml')//hospital[@hospitalID='H01']
+
+(: 4. Find multispecialty hospitals :)
+doc('hospital.xml')//hospital[type='Multispecialty']/name
+
+(: 5. Find hospitals providing emergency services :)
+doc('hospital.xml')//hospital[emergencyService='true']/name
+
+(: 6. Display all department names :)
+doc('hospital.xml')//department/name
+
+(: 7. Display all doctor first names :)
+doc('hospital.xml')//doctor/name/fname
+
+(: 8. Find doctor with ID DOC02 :)
+doc('hospital.xml')//doctor[@docID='DOC02']
+
+(: 9. Find departments on floor 2 :)
+doc('hospital.xml')//department[location/floor=2]/name
+
+(: 10. Find hospitals in pincode 600001 :)
+doc('hospital.xml')//hospital[address/pincode='600001']/name
+
+(: 11. Count all hospitals :)
+count(doc('hospital.xml')//hospital)
+
+(: 12. Count all doctors :)
+count(doc('hospital.xml')//doctor)
+
+(: 13. Count all departments :)
+count(doc('hospital.xml')//department)
+
+(: 14. Find departments with extension 103 :)
+doc('hospital.xml')//department[location/extension=103]/name
+
+(: 15. Display hospital websites :)
+doc('hospital.xml')//hospital/website/text()
+
+
+(: ==================== XQUERY QUERIES ==================== :)
+
+(: 1. Display all hospital names :)
+for $h in doc('hospital.xml')//hospital
+return $h/name
+
+(: 2. Display hospital ID and name :)
+for $h in doc('hospital.xml')//hospital
+return
+    <hospital>
+        <id>{data($h/@hospitalID)}</id>
+        {$h/name}
+    </hospital>
+
+(: 3. Find hospitals that provide emergency services :)
+for $h in doc('hospital.xml')//hospital
+where $h/emergencyService = 'true'
+return $h/name
+
+(: 4. Display department names and floors :)
+for $d in doc('hospital.xml')//department
+return
+    <department>
+        <name>{data($d/name)}</name>
+        <floor>{data($d/location/floor)}</floor>
+    </department>
+
+(: 5. Display doctors with full names and specialties :)
+for $d in doc('hospital.xml')//doctor
+return
+    <doctor id="{data($d/@docID)}">
+        <fullname>{
+            concat(
+                data($d/name/fname),
+                ' ',
+                data($d/name/lname)
+            )
+        }</fullname>
+        {$d/specialty}
+    </doctor>
+
+(: 6. Find hospitals with no doctors :)
+for $h in doc('hospital.xml')//hospital
+where empty($h/doctors/doctor)
+return $h/name
+
+(: 7. Count departments in each hospital :)
+for $h in doc('hospital.xml')//hospital
+return
+    <hospital name="{data($h/name)}">
+        <departmentCount>
+            {count($h/departments/department)}
+        </departmentCount>
+    </hospital>
+
+(: 8. Sort hospitals alphabetically :)
+for $h in doc('hospital.xml')//hospital
+order by string($h/name)
+return $h/name
+
+(: 9. Group hospitals by type :)
+for $h in doc('hospital.xml')//hospital
+let $t := string($h/type)
+group by $t
+return
+    <group type="{$t}" count="{count($h)}">
+        {$h/name}
+    </group>
+
+(: 10. Find doctors in Orthopaedics :)
+for $d in doc('hospital.xml')//doctor
+where $d/specialty = 'Orthopaedics'
+return
+    <result>
+        {$d/name/fname}
+        {$d/name/lname}
+        {$d/specialty}
+    </result>
+
+(: 11. Display hospital names and emergency status :)
+for $h in doc('hospital.xml')//hospital
+return
+    <result>
+        <name>{data($h/name)}</name>
+        <emergency>{
+            if ($h/emergencyService = 'true')
+            then 'Available'
+            else 'Not Available'
+        }</emergency>
+    </result>
+
+(: 12. Display departments and their doctors in charge :)
+for $h in doc('hospital.xml')//hospital
+for $d in $h/departments/department
+let $docID := string($d/doctorIncharge/@docID)
+let $doc := $h/doctors/doctor[@docID = $docID]
+return
+    <department>
+        <name>{data($d/name)}</name>
+        <doctor>{
+            concat(
+                data($doc/name/fname),
+                ' ',
+                data($doc/name/lname)
+            )
+        }</doctor>
+    </department>
+
+(: 13. Group hospitals by type and show only multispecialty :)
+for $h in doc('hospital.xml')//hospital
+let $t := string($h/type)
+group by $t
+where $t = 'Multispecialty'
+return
+    <group type="{$t}">
+        <count>{count($h)}</count>
+        {$h/name}
+    </group>
+
+(: 14. Create a complete hospital report :)
+<report>
+{
+    for $h in doc('hospital.xml')//hospital
+    return
+        <hospital id="{data($h/@hospitalID)}">
+            {$h/name}
+            {
+                for $d in $h/departments/department
+                let $id := string($d/doctorIncharge/@docID)
+                let $doc := $h/doctors/doctor[@docID = $id]
+                return
+                    <department>
+                        {$d/name}
+                        <doctor>{
+                            concat(
+                                data($doc/name/fname),
+                                ' ',
+                                data($doc/name/lname)
+                            )
+                        }</doctor>
+                    </department>
+            }
+        </hospital>
+}
+</report>
+
+
+(: ==================== USER-DEFINED FUNCTION ==================== :)
+
+(: Syntax :)
+(: declare function local:functionName($parameter as xs:integer)
+   as xs:integer {
+       expression
+   };
+:)
+
+(: 15. Count departments using a custom function :)
+declare function local:departmentCount(
+    $h as element(hospital)
+) as xs:integer
+{
+    count($h/departments/department)
+};
+
+for $h in doc('hospital.xml')//hospital
+return
+    <result>
+        <hospital>{data($h/name)}</hospital>
+        <count>{local:departmentCount($h)}</count>
+    </result>
+
+
+(: 16. Custom function to find a doctor's full name :)
+declare function local:doctorName(
+    $d as element(doctor)
+) as xs:string
+{
+    concat(
+        data($d/name/fname),
+        ' ',
+        data($d/name/lname)
+    )
+};
+
+for $d in doc('hospital.xml')//doctor
+return
+    <result>
+        <id>{data($d/@docID)}</id>
+        <name>{local:doctorName($d)}</name>
+    </result>
+
+
+(: 17. Custom currency conversion function :)
+declare function local:convertCurrency(
+    $rupees as xs:decimal,
+    $currency as xs:string
+) as xs:decimal
+{
+    if ($currency = 'USD')
+    then $rupees div 83.0
+    else if ($currency = 'EUR')
+    then $rupees div 90.0
+    else if ($currency = 'GBP')
+    then $rupees div 105.0
+    else if ($currency = 'INR')
+    then $rupees
+    else -1
+};
+
+local:convertCurrency(830, 'USD')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+XML, XPATH, XQUERY AND BASEX LAB VIVA QUESTIONS WITH ANSWERS
+
+1. What is XML?
+XML stands for Extensible Markup Language. It is used to store and transport structured data.
+
+2. What is the purpose of XML?
+It stores data in a structured, readable, and hierarchical format.
+
+3. What is an XML element?
+An element consists of a start tag, content, and an end tag.
+Example: <name>Arun</name>
+
+4. What is an XML attribute?
+An attribute provides additional information about an element.
+Example: hospitalID="H01"
+
+5. What is the difference between an element and an attribute?
+An element stores data as content, while an attribute stores information inside the opening tag.
+
+6. What is the root element in hospital.xml?
+The root element is <hospitals>.
+
+7. What are parent and child elements?
+A parent contains another element. For example, hospital is the parent of name.
+
+8. What is a well-formed XML document?
+An XML document that follows syntax rules, including proper nesting, matching tags, and a single root element.
+
+9. Is XML case-sensitive?
+Yes. <Hospital> and <hospital> are different elements.
+
+10. What is the purpose of the XML declaration?
+It specifies the XML version and optionally the character encoding.
+Example: <?xml version="1.0" encoding="UTF-8"?>
+
+11. What does <departments/> mean?
+It is a self-closing element representing an empty departments element.
+
+12. What is an XML namespace?
+A namespace distinguishes element and attribute names using a URI to avoid naming conflicts.
+
+13. What is XPath?
+XPath stands for XML Path Language. It is used to select nodes from an XML document.
+
+14. What is the difference between / and //?
+/ selects nodes along a direct path from the current context or document root.
+// selects descendant nodes at any depth.
+
+15. What does //hospital/name select?
+It selects the name elements of all hospital elements in the document.
+
+16. What does @hospitalID mean?
+It refers to the hospitalID attribute.
+
+17. What is a predicate in XPath?
+A predicate filters nodes using conditions inside square brackets.
+Example: //hospital[@hospitalID='H01']
+
+18. What does //hospital[@hospitalID='H01'] select?
+It selects the hospital element whose hospitalID is H01.
+
+19. What is the use of text()?
+It selects the text-node children of an element.
+
+20. What does count(//hospital) return?
+2, because the XML contains two hospital elements.
+
+21. What does count(//doctor) return?
+3, because three doctor elements are present in the XML.
+
+22. What does count(//department) return?
+3, because three department elements are present in the XML.
+
+23. What does //department[location/floor=2]/name return?
+Orthopaedics, the department on floor 2.
+
+24. What is the difference between [1] and last()?
+[1] selects the first matching node in the relevant context. last() selects the last node in that context.
+
+25. How do you select a hospital using its ID?
+//hospital[@hospitalID='H01']
+
+26. How do you select all doctor IDs?
+//doctor/@docID
+
+27. Can XPath perform calculations?
+Yes. It supports functions such as count(), sum(), and, in XPath 2.0 and later, avg().
+
+28. What is XQuery?
+XQuery is a language used to query, filter, sort, calculate, and transform XML data.
+
+29. What is FLWOR?
+FLWOR stands for For, Let, Where, Order by, Return. XQuery also supports group by.
+
+30. What is the use of for?
+It iterates through a sequence of XML nodes or values.
+
+31. What is the use of let?
+It assigns a value or sequence to a variable.
+
+32. What is the use of where?
+It filters items according to a condition.
+
+33. What is the use of order by?
+It sorts query results. Ascending order is the default, and descending can be specified.
+
+34. What is the use of return?
+It specifies the result produced by a query.
+
+35. What does doc('hospital.xml') do?
+It loads the XML document named hospital.xml.
+
+36. What does data() do?
+It extracts the typed or atomic value of a node.
+
+37. What is the difference between XPath and XQuery?
+XPath mainly selects nodes and values. XQuery supports querying, filtering, sorting, calculations, and constructing XML output.
+
+38. What does group by do?
+It groups items that have the same grouping key.
+
+39. What does count($h) mean after group by?
+It counts the hospital items in the current group.
+
+40. What does empty() do?
+It checks whether a sequence contains no items.
+
+41. What does concat() do?
+It joins strings.
+Example: concat('Arun',' ','Kumar') returns Arun Kumar.
+
+42. What does if-then-else do?
+It checks a condition and returns one result if true and another if false.
+
+43. What is a direct XML constructor in XQuery?
+It creates XML output directly.
+Example: <result>{$h/name}</result>
+
+44. What is the use of curly braces {} in XQuery?
+They evaluate and insert XQuery expressions inside constructed XML.
+
+45. Why do we use xs:integer()?
+It converts a valid value to an integer.
+
+46. What is a user-defined function?
+A function written by the programmer to perform a specific task and optionally return a result.
+
+47. What is the syntax of a user-defined function?
+
+declare function local:functionName(
+    $parameter as xs:integer
+) as xs:integer
+{
+    expression
+};
+
+48. What does local: mean?
+It is a namespace prefix conventionally used for locally defined XQuery functions.
+
+49. What is a parameter?
+A parameter is an input variable passed to a function.
+
+50. What is a return type?
+It specifies the type of value that the function is expected to return.
+
+51. Why do we use xs:decimal?
+It represents decimal numeric values.
+
+52. What does local:convertCurrency(830, 'USD') return in the example?
+10, because 830 is divided by the example exchange rate of 83.
+
+53. Why does the currency function return -1?
+It uses -1 as a placeholder for an unsupported currency code.
+
+54. Can a function accept multiple parameters?
+Yes. For example, a currency conversion function can accept an amount and a currency code.
+
+55. Why should a function have a return type?
+It documents and constrains the kind of result the function returns.
+
+56. How many hospitals are present in hospital.xml?
+2.
+
+57. Which hospital is multispecialty?
+City Care Hospital.
+
+58. Which hospital offers emergency services?
+City Care Hospital.
+
+59. How many doctors are listed?
+3.
+
+60. How many departments are listed?
+3.
+
+61. Which doctor specializes in Orthopaedics?
+Ravi Shankar.
+
+62. Which department is on the second floor?
+Orthopaedics.
+
+63. What is the ID of the Paediatrics department?
+D03.
+
+64. What is the doctor ID of Priya Devi?
+DOC03.
+
+65. Which hospital has no doctors?
+General Health Hospital.
+
+66. What is the pincode of City Care Hospital?
+600001.
+
+67. What are the hospital types?
+Multispecialty and General.
+
+68. What is the extension for Paediatrics?
+103.
+
+69. How many hospitals are in the Multispecialty group?
+1.
+
+70. What happens if an ID does not exist?
+The query normally returns an empty sequence.
+
+71. What is BaseX?
+BaseX is an XML database system that supports XPath and XQuery.
+
+72. What is the extension of an XML file?
+.xml
+
+73. What is the extension of an XQuery file?
+.xq or .xquery
+
+74. How do you run an XQuery file in BaseX command line?
+Use: basex query.xq
+This assumes BaseX is installed and the file is in the current directory.
+
+75. Why do we use doc('hospital.xml')?
+It loads the XML file for querying. The file path must be correct.
+
+76. What happens if the XML filename is incorrect?
+BaseX reports a document-loading or file-not-found error.
+
+77. What is the difference between XML and XQuery files?
+XML contains structured data. XQuery contains instructions to retrieve or transform that data.
+
+78. Why should each query be executed separately?
+Each standalone query produces its own result. Combining multiple independent queries in one file may cause syntax errors.
+
+79. How do you check whether your query is correct?
+Run it in BaseX and inspect the output or any syntax and type error messages.
+
+IMPORTANT QUESTIONS TO MEMORISE FIRST
+
+1. What is XML?
+A markup language used to store and transport structured data.
+
+2. What is XPath?
+A language used to select nodes from XML.
+
+3. What is XQuery?
+A language used to query and transform XML.
+
+4. What is FLWOR?
+For, Let, Where, Order by, Return.
+
+5. What is a user-defined function?
+A programmer-defined function that accepts inputs and returns a result.
+
+6. What is the difference between XPath and XQuery?
+XPath selects nodes and values, whereas XQuery can also filter, sort, calculate, and construct XML.
+
+7. What is group by?
+It groups records that have the same value.
+
+8. What is the purpose of doc()?
+It loads an XML document.
+
+9. What does count() do?
+It counts the number of items in a sequence.
+
+10. What is BaseX?
+An XML database system that supports XPath and XQuery.
+
+PRACTICAL TIP:
+Practise writing these three queries without looking at your notes:
+1. Find a hospital using its ID.
+2. Count the departments in each hospital.
+3. Display each department with the name of its doctor in charge.
+

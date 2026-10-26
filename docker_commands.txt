@@ -1,0 +1,693 @@
+# 1. VERSION, ENGINE AND CONTEXT
+docker --version
+docker version
+docker info
+docker system info
+docker context ls
+docker context show
+docker context inspect
+docker context use CONTEXT
+
+# 2. IMAGES
+docker images
+docker image ls
+docker images -a
+docker images -q
+docker pull nginx
+docker pull nginx:alpine
+docker pull ubuntu:22.04
+docker pull --platform linux/amd64 nginx:alpine
+docker search nginx
+docker search --limit 10 nginx
+docker search --filter is-official=true nginx
+docker image inspect nginx
+docker image inspect --format='{{.Id}}' nginx
+docker history nginx
+docker image history nginx
+docker tag nginx mynginx:v1
+docker tag SOURCE_IMAGE TARGET_IMAGE:TAG
+docker rmi nginx
+docker rmi nginx:alpine
+docker rmi -f IMAGE
+docker image rm IMAGE
+docker image prune
+docker image prune -a
+docker save -o image.tar nginx:alpine
+docker load -i image.tar
+docker export -o filesystem.tar CONTAINER
+docker import filesystem.tar imported-image:v1
+docker manifest inspect nginx:alpine
+
+# 3. CREATE AND RUN CONTAINERS
+docker run nginx
+docker run -d nginx
+docker run -d --name myweb nginx
+docker run -it ubuntu bash
+docker run -it alpine sh
+docker run -d -p 8080:80 nginx
+docker run -d --name web -p 8080:80 nginx
+docker run -d -p 8081:80 -p 8443:443 nginx
+docker run -d -p 127.0.0.1:8080:80 nginx
+docker run -d -P nginx
+docker run --rm alpine echo Hello
+docker run -d -e APP_MODE=test nginx
+docker run -d -e USER=admin -e MODE=test nginx
+docker run --env-file .env nginx
+docker run -d --restart no nginx
+docker run -d --restart always nginx
+docker run -d --restart unless-stopped nginx
+docker run -d --restart on-failure:5 nginx
+docker run -it --workdir /tmp ubuntu bash
+docker run -it --user 1000:1000 ubuntu bash
+docker run -d --memory 512m --cpus 1 nginx
+docker run -d --hostname myhost nginx
+docker run -d --read-only nginx
+docker run alpine echo Hello
+docker run alpine sh -c "echo Hello && sleep 5"
+
+# 4. LIST AND FILTER CONTAINERS
+docker ps
+docker ps -a
+docker ps -q
+docker ps -aq
+docker ps -s
+docker ps --no-trunc
+docker ps --filter "status=running"
+docker ps --filter "status=exited"
+docker ps --filter "name=web"
+docker ps --filter "ancestor=nginx"
+docker ps --format "{{.ID}} {{.Names}} {{.Status}}"
+docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Ports}}"
+
+# 5. CONTAINER LIFECYCLE
+docker start CONTAINER
+docker stop CONTAINER
+docker restart CONTAINER
+docker pause CONTAINER
+docker unpause CONTAINER
+docker kill CONTAINER
+docker rm CONTAINER
+docker rm -f CONTAINER
+docker rm -v CONTAINER
+docker rename OLD_NAME NEW_NAME
+docker stop $(docker ps -q)
+docker rm $(docker ps -aq)
+docker ps -q | ForEach-Object { docker stop $_ }
+docker ps -aq | ForEach-Object { docker rm $_ }
+docker container prune
+
+# 6. EXECUTE COMMANDS INSIDE CONTAINERS
+docker exec CONTAINER ls /
+docker exec CONTAINER pwd
+docker exec CONTAINER printenv
+docker exec -it CONTAINER bash
+docker exec -it CONTAINER sh
+docker exec -u 0 -it CONTAINER sh
+docker exec -u USERNAME CONTAINER whoami
+docker exec -e MODE=test CONTAINER printenv MODE
+docker exec -w /tmp CONTAINER pwd
+docker attach CONTAINER
+
+# 7. INSPECT, MONITOR AND DEBUG
+docker inspect CONTAINER
+docker inspect IMAGE
+docker inspect --type container CONTAINER
+docker inspect -f "{{.State.Status}}" CONTAINER
+docker inspect -f "{{.State.Running}}" CONTAINER
+docker inspect -f "{{.Config.Image}}" CONTAINER
+docker inspect -f "{{.HostConfig.RestartPolicy.Name}}" CONTAINER
+docker inspect -f "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}" CONTAINER
+docker logs CONTAINER
+docker logs -f CONTAINER
+docker logs -t CONTAINER
+docker logs --tail 20 CONTAINER
+docker logs --since 10m CONTAINER
+docker logs --until 2026-10-13T17:00:00 CONTAINER
+docker logs --tail 50 -f CONTAINER
+docker stats
+docker stats CONTAINER
+docker stats --no-stream
+docker top CONTAINER
+docker port CONTAINER
+docker diff CONTAINER
+docker cp index.html CONTAINER:/tmp/index.html
+docker cp CONTAINER:/etc/hostname ./hostname.txt
+docker wait CONTAINER
+docker update --restart unless-stopped CONTAINER
+docker update --memory 512m --cpus 1 CONTAINER
+
+# 8. NETWORKING
+docker network ls
+docker network create mynetwork
+docker network create --driver bridge mynetwork
+docker network inspect mynetwork
+docker network connect mynetwork CONTAINER
+docker network disconnect mynetwork CONTAINER
+docker network rm mynetwork
+docker network prune
+docker run -d --name web1 --network mynetwork nginx
+docker run -d --name web2 --network mynetwork nginx
+docker exec web1 ping -c 4 web2
+docker exec web2 ping -c 4 web1
+docker exec web1 getent hosts web2
+docker inspect -f "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}" web1
+docker run -d --network host nginx
+docker run --network none alpine
+
+# 9. COMMUNICATION BETWEEN TWO SEPARATE NETWORKS
+docker network create net1
+docker network create net2
+docker run -dit --name c1 --network net1 alpine sh
+docker run -dit --name c2 --network net2 alpine sh
+docker network inspect net1
+docker network inspect net2
+docker exec c1 ping -c 4 c2
+docker network connect net2 c1
+docker exec c1 ping -c 4 c2
+docker exec c2 ping -c 4 c1
+docker network inspect net1
+docker network inspect net2
+docker stop c1 c2
+docker rm c1 c2
+docker network rm net1 net2
+
+# 10. VOLUMES AND BIND MOUNTS
+docker volume ls
+docker volume create mydata
+docker volume inspect mydata
+docker volume rm mydata
+docker volume prune
+docker run -d --name db -v mydata:/data IMAGE
+docker run -d --name db --mount source=mydata,target=/data IMAGE
+docker run -d --name web -v "D:\mywebsite:/usr/share/nginx/html:ro" nginx
+docker run -d --mount type=bind,source=/HOST/PATH,target=/data,readonly IMAGE
+
+# 11. DOCKERFILE AND IMAGE BUILDING
+docker build -t myapp:v1 .
+docker build -f Dockerfile.dev -t myapp:dev .
+docker build --no-cache -t myapp:v2 .
+docker pull nginx:latest
+docker login
+docker login registry.example.com
+docker tag myapp:v1 YOUR_USERNAME/myapp:v1
+docker push YOUR_USERNAME/myapp:v1
+docker logout
+docker logout registry.example.com
+docker commit CONTAINER myapp:snapshot
+
+# 12. DOCKER COMPOSE
+docker compose version
+docker compose --help
+docker compose config
+docker compose config --services
+docker compose config --images
+docker compose build
+docker compose build --no-cache
+docker compose build SERVICE
+docker compose pull
+docker compose up
+docker compose up -d
+docker compose up -d --build
+docker compose up -d SERVICE
+docker compose ps
+docker compose ps -a
+docker compose images
+docker compose logs
+docker compose logs -f
+docker compose logs --tail 50 SERVICE
+docker compose exec SERVICE sh
+docker compose exec SERVICE bash
+docker compose exec -u root SERVICE sh
+docker compose run --rm SERVICE COMMAND
+docker compose stop
+docker compose stop SERVICE
+docker compose start
+docker compose restart
+docker compose restart SERVICE
+docker compose kill
+docker compose rm
+docker compose down
+docker compose down -v
+docker compose top
+docker compose port SERVICE CONTAINER_PORT
+docker compose pull SERVICE
+docker compose push SERVICE
+docker compose -f compose.yaml up -d
+docker compose -f compose.dev.yaml up -d
+
+# 13. SYSTEM AND CLEANUP
+docker system df
+docker system df -v
+docker system prune
+docker system prune -a
+docker system prune -a --volumes
+docker container prune
+docker image prune
+docker image prune -a
+docker network prune
+docker volume prune
+docker builder prune
+
+# 14. REGISTRY AND EVENTS
+docker login
+docker logout
+docker search nginx
+docker pull nginx
+docker push YOUR_USERNAME/myapp:v1
+docker events
+docker events --since 10m
+docker events --filter type=container
+
+# 15. DOCKER SWARM
+docker swarm init
+docker swarm join-token worker
+docker swarm join-token manager
+docker swarm leave
+docker swarm leave --force
+docker node ls
+docker service create --name web -p 8080:80 --replicas 3 nginx
+docker service ls
+docker service ps web
+docker service scale web=3
+docker service logs web
+docker service rm web
+docker stack deploy -c compose.yaml mystack
+docker stack ls
+docker stack services mystack
+docker stack ps mystack
+docker stack rm mystack
+
+# 16. COMPLETE PRACTICAL WORKFLOW
+docker --version
+docker pull nginx:alpine
+docker images
+docker run -d --name examweb -p 8080:80 nginx:alpine
+docker ps
+docker port examweb
+docker inspect examweb
+docker logs examweb
+docker stats --no-stream
+docker exec -it examweb sh
+docker stop examweb
+docker ps -a
+docker rm examweb
+docker images
+
+
+
+
+
+
+
+
+# 1. Create two networks
+docker network create net1
+docker network create net2
+
+# 2. Create containers on separate networks
+docker run -dit --name c1 --network net1 alpine sh
+docker run -dit --name c2 --network net2 alpine sh
+
+# 3. Verify containers and networks
+docker ps
+docker network inspect net1
+docker network inspect net2
+
+# 4. Test communication before connecting networks
+docker exec c1 ping -c 4 c2
+
+# 5. Connect c1 to the second network
+docker network connect net2 c1
+
+# 6. Verify communication after connecting
+docker exec c1 ping -c 4 c2
+docker exec c2 ping -c 4 c1
+
+# 7. Verify network configuration
+docker network inspect net1
+docker network inspect net2
+
+# 8. Stop and remove containers
+docker stop c1 c2
+docker rm c1 c2
+
+# 9. Remove networks
+docker network rm net1 net2
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+DOCKER CLI – IMPORTANT VIVA QUESTIONS AND ANSWERS
+
+1. BASIC DOCKER CONCEPTS
+
+1. What is Docker?
+Docker is a platform used to build, package, and run applications inside containers.
+
+2. What is a container?
+A container is an isolated environment that runs an application and its dependencies.
+
+3. What is a Docker image?
+A Docker image is a read-only template used to create containers.
+
+4. What is the difference between an image and a container?
+An image is a template, whereas a container is an instance created from that image.
+
+5. What is Docker Engine?
+Docker Engine is the software that builds and runs Docker containers.
+
+6. What is Docker Hub?
+Docker Hub is a registry used to store and share Docker images.
+
+7. What is a Docker registry?
+A registry stores and distributes Docker images.
+
+8. What is the difference between Docker and a virtual machine?
+Containers share the host operating system kernel, whereas virtual machines run separate guest operating systems.
+
+9. What is Docker CLI?
+Docker CLI is a command-line interface used to interact with Docker.
+
+10. What is the use of docker --help?
+It displays available Docker commands and options.
+
+2. DOCKER IMAGE COMMANDS
+
+11. What is the use of docker pull nginx?
+It downloads the Nginx image from a registry.
+
+12. What is the use of docker images?
+It lists locally available Docker images.
+
+13. What is the use of docker search nginx?
+It searches for Nginx images on Docker Hub.
+
+14. What is the use of docker image inspect nginx?
+It displays detailed information about the image.
+
+15. What is the use of docker tag?
+It assigns another name or tag to an image.
+
+16. What is the use of docker rmi nginx?
+It removes the specified image if it is not being used by a container.
+
+17. What is the difference between docker pull and docker push?
+Pull downloads an image, whereas push uploads an image to a registry.
+
+18. What is the use of docker save and docker load?
+Docker save saves an image to a tar archive, and docker load loads an image from an archive.
+
+19. What is an image tag?
+A tag identifies a particular version or variant of an image, such as nginx:alpine.
+
+20. What is the use of docker history nginx?
+It displays the image's build history and layers.
+
+3. CONTAINER COMMANDS
+
+21. What is the use of docker run?
+It creates and starts a container from an image.
+
+22. What is the use of -d?
+It runs a container in detached or background mode.
+
+23. What is the use of -it?
+-i keeps standard input open, and -t allocates a terminal.
+
+24. What is the use of --name?
+It assigns a name to the container.
+
+25. What is the difference between docker run and docker start?
+Docker run creates and starts a new container, whereas docker start starts an existing stopped container.
+
+26. What is the difference between docker stop and docker kill?
+Docker stop requests a graceful shutdown, whereas docker kill sends a termination signal immediately by default.
+
+27. What is the difference between docker ps and docker ps -a?
+Docker ps lists running containers, whereas docker ps -a lists all containers, including stopped containers.
+
+28. What is the use of docker exec?
+It executes a command inside a running container.
+
+29. What is the difference between docker exec and docker attach?
+Docker exec starts a separate process inside the container, whereas docker attach connects to the main process's input and output streams.
+
+30. What is the use of docker logs?
+It displays the available logs of a container.
+
+31. What is the use of docker inspect?
+It displays detailed configuration and runtime information about a container or image.
+
+32. What is the use of docker stats?
+It displays container resource usage, including CPU and memory.
+
+33. What is the use of docker port?
+It displays the port mappings of a container.
+
+34. What is the use of docker rm -f CONTAINER?
+It forcefully removes a container, stopping it first if necessary.
+
+35. What is the use of --rm in docker run?
+It automatically removes the container after it exits.
+
+4. DOCKER NETWORKING
+
+36. What is Docker networking?
+It allows containers to communicate with one another and with external systems.
+
+37. What are the common Docker network drivers?
+Bridge, host, none, overlay, and macvlan.
+
+38. What is a bridge network?
+It connects containers on the same Docker host through a virtual network.
+
+39. What is the use of docker network ls?
+It lists Docker networks.
+
+40. What is the use of docker network create mynet?
+It creates a user-defined bridge network by default.
+
+41. What is the use of docker network inspect mynet?
+It displays network configuration and connected containers.
+
+42. How do you connect a container to a network?
+Use docker network connect NETWORK CONTAINER.
+
+43. How do you disconnect a container from a network?
+Use docker network disconnect NETWORK CONTAINER.
+
+44. How do two containers communicate on the same user-defined bridge network?
+They can communicate using their container names or IP addresses, subject to network configuration.
+
+45. How do you test communication between two containers?
+Use docker exec c1 ping -c 4 c2, provided ping is installed and ICMP traffic is permitted.
+
+46. How do you check a container's IP address?
+Use docker inspect and examine NetworkSettings.Networks.
+
+47. Can containers on separate networks communicate directly by container name?
+Generally, no. They need a shared network or another configured routing and name-resolution mechanism.
+
+48. How do you enable communication between containers on separate networks?
+Connect one container to the other network using docker network connect.
+
+49. What is the difference between bridge and host networking?
+Bridge networking uses a separate container network, whereas host networking shares the host's network namespace where supported.
+
+50. What is the use of --network none?
+It disables normal container networking.
+
+51. What is port mapping?
+It forwards a host port to a container port. For example, -p 8080:80 maps host port 8080 to container port 80.
+
+52. What is the difference between EXPOSE and -p?
+EXPOSE documents a container port, whereas -p publishes a port on the host.
+
+53. What is the default Docker bridge?
+It is Docker's built-in bridge network named bridge.
+
+54. What is the difference between the default bridge and a user-defined bridge?
+User-defined bridges provide automatic container-name DNS resolution and network-specific configuration.
+
+55. What is an overlay network?
+It connects containers across multiple Docker hosts and is commonly used with Docker Swarm.
+
+5. VOLUMES AND BIND MOUNTS
+
+56. What is a Docker volume?
+A Docker volume is storage managed by Docker that can persist beyond a container's lifecycle.
+
+57. Why are volumes used?
+They persist data, share data between containers, and separate storage from container lifecycles.
+
+58. What is the use of docker volume create mydata?
+It creates a named volume.
+
+59. What is the difference between a volume and a bind mount?
+A volume is managed by Docker, whereas a bind mount maps a specified host filesystem path into a container.
+
+60. What is the use of docker volume ls?
+It lists Docker volumes.
+
+61. Does removing a container delete its named volume?
+Normally, no. The volume remains unless explicitly removed or otherwise managed.
+
+62. What does docker compose down -v do?
+It removes Compose-managed containers and networks and also removes declared named volumes and attached anonymous volumes.
+
+6. DOCKERFILE AND IMAGE BUILDING
+
+63. What is a Dockerfile?
+A Dockerfile is a text file containing instructions to build a Docker image.
+
+64. What is the use of docker build -t myapp:v1 .?
+It builds an image and tags it myapp:v1 using the current directory as the build context.
+
+65. What does the dot (.) mean in docker build?
+It specifies the current directory as the build context.
+
+66. What is the difference between RUN and CMD?
+RUN executes commands during image building, whereas CMD specifies the default command or arguments when a container starts.
+
+67. What is the difference between CMD and ENTRYPOINT?
+CMD provides default commands or arguments, whereas ENTRYPOINT defines the main executable.
+
+68. What is the use of FROM?
+It specifies the base image.
+
+69. What is the use of WORKDIR?
+It sets the working directory for subsequent Dockerfile instructions.
+
+70. What is the use of COPY?
+It copies files from the build context into the image.
+
+71. What is the use of ENV?
+It sets environment variables in the image.
+
+72. What is the use of .dockerignore?
+It excludes specified files and directories from the build context.
+
+73. What is the use of docker build --no-cache?
+It builds without reusing cached build layers.
+
+7. DOCKER COMPOSE
+
+74. What is Docker Compose?
+It is a tool for defining and running multi-container applications using a YAML configuration file.
+
+75. What is the use of compose.yaml?
+It defines services, networks, volumes, and other application configuration.
+
+76. What is the use of docker compose up -d?
+It creates and starts application services in the background.
+
+77. What is the use of docker compose down?
+It stops and removes application containers and Compose-managed networks.
+
+78. What is the use of docker compose ps?
+It lists containers belonging to the Compose project.
+
+79. What is the use of docker compose logs -f?
+It follows service logs in real time.
+
+80. What is the difference between docker compose stop and docker compose down?
+Stop stops services but retains their containers. Down also removes the project's containers and networks.
+
+81. How do services communicate in Docker Compose?
+Services on the same Compose network can generally communicate using their service names and container ports.
+
+82. What is the use of docker compose config?
+It validates and displays the resolved Compose configuration.
+
+8. SYSTEM CLEANUP AND DOCKER SWARM
+
+83. What is the use of docker system df?
+It displays Docker disk usage.
+
+84. What is the use of docker system prune?
+It removes unused Docker resources according to its cleanup rules.
+
+85. What does docker system prune -a do?
+It also removes unused images, not just dangling images.
+
+86. What is Docker Swarm?
+It is Docker's native container orchestration mode for managing services across a cluster.
+
+87. What is a Swarm service?
+It is a declarative definition of a workload that Docker Swarm manages across its nodes.
+
+88. What is the use of docker swarm init?
+It initializes a new Swarm and makes the current node a manager.
+
+89. What is the use of docker service scale web=3?
+It sets the desired replica count of the web service to three.
+
+90. What is the difference between a container and a service in Swarm?
+A container is an individual instance, whereas a service defines the desired workload and can manage multiple replicas.
+
+9. PRACTICAL OUTPUT-BASED QUESTIONS
+
+91. How do you check whether Docker is running?
+Use docker info.
+
+92. How do you check all containers?
+Use docker ps -a.
+
+93. How do you enter an Alpine container?
+Use docker exec -it CONTAINER sh.
+
+94. How do you expose Nginx on port 8080?
+Use docker run -d -p 8080:80 nginx.
+
+95. How do you find a container's IP address?
+Use docker inspect CONTAINER.
+
+96. How do you test DNS between containers?
+Use docker exec c1 getent hosts c2.
+
+97. How do you check whether two containers share a network?
+Use docker network inspect NETWORK.
+
+98. How do you view live resource usage?
+Use docker stats.
+
+99. How do you remove unused networks?
+Use docker network prune.
+
+100. How do you upload an image to Docker Hub?
+Log in, tag the image with your Docker Hub username, and push it using docker push.
+
+10. LAST-MINUTE REVISION
+
+1. What is Docker, and why is it used?
+2. What is the difference between an image and a container?
+3. Explain docker run, docker ps, docker stop, and docker rm.
+4. Explain the difference between docker exec and docker attach.
+5. What is Docker networking?
+6. How do you verify communication between two containers?
+7. How do you connect a container to another network?
+8. What is the difference between volumes and bind mounts?
+9. What is a Dockerfile, and what are RUN, CMD, and ENTRYPOINT?
+10. What is Docker Compose, and what is the difference between up, stop, and down?
+
+PRACTICAL VIVA TIP:
+For every command, be prepared to explain what it does, why you used it, and what output you expect.

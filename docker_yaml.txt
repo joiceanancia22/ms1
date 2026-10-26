@@ -1,0 +1,602 @@
+# DOCKER PRACTICAL EXAM — COMPLETE NOTES
+
+## 1. BASIC DOCKER CLI COMMANDS
+
+```powershell
+docker --version
+docker version
+docker info
+docker images
+docker pull nginx:alpine
+docker ps
+docker ps -a
+docker build -t myapp:v1 .
+docker run -d --name mycontainer -p 8080:80 nginx:alpine
+docker logs mycontainer
+docker exec -it mycontainer sh
+docker stop mycontainer
+docker start mycontainer
+docker restart mycontainer
+docker rm mycontainer
+docker rmi myapp:v1
+docker system df
+docker system prune
+```
+
+## 2. EASY EXAMPLE — PYTHON FLASK DOCKERFILE
+
+### Folder structure
+
+```text
+D:\DockerLab\
+├── app.py
+├── requirements.txt
+└── Dockerfile
+```
+
+### app.py
+
+```python
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Hello from Docker!"
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
+```
+
+### requirements.txt
+
+```text
+flask
+```
+
+### Dockerfile
+
+```dockerfile
+FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+EXPOSE 5000
+CMD ["python", "app.py"]
+```
+
+### Execution commands
+
+```powershell
+cd D:\DockerLab
+docker build -t webapp:v1 .
+docker run -d --name web-container -p 8080:5000 webapp:v1
+docker ps
+docker logs web-container
+```
+
+Browser: http://localhost:8080
+
+Expected output: Hello from Docker!
+
+## 3. NODE.JS DOCKERFILE
+
+### Folder structure
+
+```text
+D:\NodeDocker\
+├── server.js
+├── package.json
+└── Dockerfile
+```
+
+### server.js
+
+```javascript
+const http = require("http");
+
+const server = http.createServer((req, res) => {
+    res.writeHead(200, {
+        "Content-Type": "text/plain"
+    });
+    res.end("Hello from Node.js Docker!");
+});
+
+server.listen(3000, "0.0.0.0");
+```
+
+### package.json
+
+```json
+{
+  "name": "nodeapp",
+  "version": "1.0.0",
+  "main": "server.js"
+}
+```
+
+### Dockerfile
+
+```dockerfile
+FROM node:22
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+EXPOSE 3000
+CMD ["node", "server.js"]
+```
+
+### Execution commands
+
+```powershell
+cd D:\NodeDocker
+docker build -t nodeapp:v1 .
+docker run -d --name node-container -p 8080:3000 nodeapp:v1
+docker logs node-container
+```
+
+Browser: http://localhost:8080
+
+## 4. JAVA DOCKERFILE
+
+### Folder structure
+
+```text
+D:\JavaDocker\
+├── app.jar
+└── Dockerfile
+```
+
+### Dockerfile
+
+```dockerfile
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+COPY app.jar .
+EXPOSE 8080
+CMD ["java", "-jar", "app.jar"]
+```
+
+### Execution commands
+
+```powershell
+cd D:\JavaDocker
+docker build -t javaapp:v1 .
+docker run -d --name java-container -p 8081:8080 javaapp:v1
+docker logs java-container
+```
+
+Browser: http://localhost:8081
+
+Note: app.jar must be compiled beforehand. The browser URL works only if the JAR runs an HTTP server on port 8080.
+
+## 5. EASY DOCKER COMPOSE — WITHOUT DOCKERFILE
+
+### Folder structure
+
+```text
+D:\ComposeLab\
+└── compose.yaml
+```
+
+### compose.yaml
+
+```yaml
+services:
+  web:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+```
+
+### Execution commands
+
+```powershell
+cd D:\ComposeLab
+docker compose config
+docker compose up -d
+docker compose ps
+docker compose logs
+```
+
+Browser: http://localhost:8080
+
+Expected output: Nginx welcome page.
+
+Stop the application:
+
+```powershell
+docker compose down
+```
+
+## 6. DOCKER COMPOSE — WITH DOCKERFILE
+
+Use the app.py, requirements.txt and Dockerfile from Section 2.
+
+### Folder structure
+
+```text
+D:\DockerLab\
+├── app.py
+├── requirements.txt
+├── Dockerfile
+└── compose.yaml
+```
+
+### compose.yaml
+
+```yaml
+services:
+  web:
+    build: .
+    ports:
+      - "8080:5000"
+    restart: unless-stopped
+```
+
+### Execution commands
+
+```powershell
+cd D:\DockerLab
+docker compose config
+docker compose up --build -d
+docker compose ps
+docker compose logs
+```
+
+Browser: http://localhost:8080
+
+Expected output: Hello from Docker!
+
+Stop:
+
+```powershell
+docker compose down
+```
+
+## 7. DIFFICULT DOCKER COMPOSE — FRONTEND, BACKEND AND POSTGRESQL
+
+### Folder structure
+
+```text
+D:\FullStackDocker\
+├── compose.yaml
+├── frontend\
+│   ├── Dockerfile
+│   └── index.html
+└── backend\
+    ├── Dockerfile
+    ├── app.py
+    └── requirements.txt
+```
+
+### frontend/index.html
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Docker Application</title>
+</head>
+<body>
+    <h1>Frontend is running!</h1>
+</body>
+</html>
+```
+
+### frontend/Dockerfile
+
+```dockerfile
+FROM nginx:alpine
+COPY index.html /usr/share/nginx/html/index.html
+EXPOSE 80
+```
+
+### backend/app.py
+
+```python
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Backend is running!"
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
+```
+
+### backend/requirements.txt
+
+```text
+flask
+```
+
+### backend/Dockerfile
+
+```dockerfile
+FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+EXPOSE 5000
+CMD ["python", "app.py"]
+```
+
+### compose.yaml
+
+```yaml
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      DB_HOST: database
+      DB_PORT: "5432"
+      DB_NAME: studentdb
+      DB_USER: admin
+      DB_PASSWORD: admin123
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  database:
+    image: postgres:17
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: studentdb
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d studentdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+volumes:
+  dbdata:
+
+networks:
+  app-network:
+    driver: bridge
+```
+
+### Execution commands
+
+```powershell
+cd D:\FullStackDocker
+docker compose config
+docker compose up --build -d
+docker compose ps
+docker compose logs
+docker compose logs backend
+```
+
+URLs:
+
+Frontend: http://localhost:8080
+
+Backend: http://localhost:5000
+
+PostgreSQL: localhost, port 5433
+
+Note: The backend currently returns a message and has database environment variables configured, but it does not yet connect to PostgreSQL.
+
+Stop all containers:
+
+```powershell
+docker compose down
+```
+
+Delete containers, network and stored database volume:
+
+```powershell
+docker compose down -v
+```
+
+Warning: `-v` deletes the named database volume and its stored data.
+
+## 8. DOCKER COMPOSE — THREE SERVICES WITHOUT DOCKERFILES
+
+### Folder structure
+
+```text
+D:\ComposeNoDockerfile\
+└── compose.yaml
+```
+
+### compose.yaml
+
+```yaml
+services:
+  frontend:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    networks:
+      - app-network
+
+  backend:
+    image: kennethreitz/httpbin
+    ports:
+      - "5000:80"
+    networks:
+      - app-network
+
+  database:
+    image: postgres:17
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: studentdb
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+volumes:
+  dbdata:
+
+networks:
+  app-network:
+    driver: bridge
+```
+
+### Execution commands
+
+```powershell
+cd D:\ComposeNoDockerfile
+docker compose pull
+docker compose up -d
+docker compose ps
+```
+
+URLs:
+
+Frontend: http://localhost:8080
+
+Backend: http://localhost:5000/get
+
+PostgreSQL: localhost, port 5433
+
+The services share a Docker network, but the frontend and backend are not automatically configured to communicate with each other or with PostgreSQL.
+
+## 9. IMPORTANT DOCKERFILE INSTRUCTIONS
+
+FROM — selects the base image.
+
+WORKDIR — sets the working directory.
+
+COPY — copies files into the image.
+
+RUN — executes a command during image building.
+
+EXPOSE — documents the application port.
+
+CMD — specifies the default startup command.
+
+ENV — sets environment variables.
+
+ENTRYPOINT — specifies the main executable.
+
+USER — specifies the user used to run subsequent instructions and, by default, the container.
+
+## 10. DOCKER COMPOSE COMMANDS
+
+```powershell
+docker compose config
+docker compose pull
+docker compose build
+docker compose up
+docker compose up -d
+docker compose up --build -d
+docker compose ps
+docker compose logs
+docker compose logs -f
+docker compose logs backend
+docker compose stop
+docker compose start
+docker compose restart
+docker compose down
+docker compose down -v
+docker compose images
+```
+
+## 11. COMMON ERRORS AND SOLUTIONS
+
+1. Port already allocated: change the host-side port, for example, "8082:5000".
+
+2. Container exits: use `docker logs container-name`.
+
+3. Image not found: check the image name and use `docker pull image-name`.
+
+4. YAML indentation error: use spaces, not tabs.
+
+5. Dockerfile not found: ensure the `build` path points to the correct folder.
+
+6. Flask not accessible: use `host="0.0.0.0"` and map the correct port.
+
+7. Database not ready: configure a health check and use `condition: service_healthy`.
+
+8. Container name already exists: remove the old container or use another name.
+
+## 12. FINAL EXAM REVISION
+
+### Build and run a Dockerfile
+
+```powershell
+docker build -t myapp:v1 .
+docker run -d -p 8080:5000 myapp:v1
+```
+
+### Compose with Dockerfile
+
+```yaml
+services:
+  web:
+    build: .
+    ports:
+      - "8080:5000"
+```
+
+### Compose without Dockerfile
+
+```yaml
+services:
+  web:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+```
+
+### Compose execution
+
+```powershell
+docker compose up --build -d
+docker compose ps
+docker compose logs
+docker compose down
+```
+
+REMEMBER:
+
+Dockerfile = builds an image.
+
+Docker Compose = configures and runs one or more services.
+
+build: . = builds using a Dockerfile.
+
+image: nginx:alpine = uses an existing image.
+
+ports = maps host port to container port.
+
+volumes = persist data.
+
+networks = enable communication between containers.
+
+depends_on = controls startup ordering; use a health check when service readiness matters.

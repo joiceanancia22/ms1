@@ -1,0 +1,567 @@
+# KUBERNETES PRACTICAL — YAML FILES AND COMMANDS
+
+## 1. Folder Structure
+
+```text
+D:\KubernetesLab\
+├── deployment.yaml
+├── service.yaml
+├── pod.yaml
+└── ingress.yaml
+```
+
+## 2. Deployment.yaml
+
+Creates two replicas of an Nginx application.
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  labels:
+    app: myapp
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+        - name: app-container
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+```
+
+## 3. Service.yaml
+
+Exposes the application through a NodePort service.
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+  labels:
+    app: myapp
+spec:
+  type: NodePort
+  selector:
+    app: myapp
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      nodePort: 30080
+```
+
+## 4. Pod.yaml
+
+Creates one independent Nginx Pod.
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app-pod
+  labels:
+    app: myapp
+spec:
+  containers:
+    - name: app-container
+      image: nginx:alpine
+      ports:
+        - containerPort: 80
+```
+
+Note: This Pod is separate from the two Pods created by the Deployment.
+
+## 5. Ingress.yaml
+
+Routes HTTP traffic for `myapp.local` to the Service.
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: myapp.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: app-service
+                port:
+                  number: 80
+```
+
+Note: An NGINX Ingress Controller must be installed and running. For `myapp.local`, you must also configure local DNS or a hosts-file entry pointing to the Ingress Controller's address.
+
+## 6. Execution Commands
+
+Open PowerShell:
+
+```powershell
+cd D:\KubernetesLab
+```
+
+### Step 1: Create the Deployment
+
+```powershell
+kubectl apply -f deployment.yaml
+```
+
+### Step 2: Check the Deployment
+
+```powershell
+kubectl get deployments
+kubectl describe deployment app-deployment
+```
+
+### Step 3: Check Pods
+
+```powershell
+kubectl get pods
+kubectl get pods -o wide
+```
+
+### Step 4: Create the Service
+
+```powershell
+kubectl apply -f service.yaml
+```
+
+### Step 5: Check the Service
+
+```powershell
+kubectl get services
+kubectl describe service app-service
+```
+
+### Step 6: Create the Independent Pod
+
+```powershell
+kubectl apply -f pod.yaml
+```
+
+### Step 7: Create the Ingress
+
+```powershell
+kubectl apply -f ingress.yaml
+```
+
+### Step 8: Check Ingress
+
+```powershell
+kubectl get ingress
+kubectl describe ingress app-ingress
+```
+
+### Step 9: Check All Common Resources
+
+```powershell
+kubectl get all
+kubectl get all -o wide
+kubectl get deployments,pods,services
+```
+
+## 7. Access the Application
+
+For Docker Desktop Kubernetes, try:
+
+```text
+http://localhost:30080
+```
+
+This works when the NodePort is reachable through the Docker Desktop Kubernetes node.
+
+Alternatively, use port forwarding:
+
+```powershell
+kubectl port-forward service/app-service 8080:80
+```
+
+Then open:
+
+```text
+http://localhost:8080
+```
+
+Keep the port-forward command running while accessing the application.
+
+## 8. Useful Kubernetes Commands
+
+```powershell
+kubectl cluster-info
+kubectl get nodes
+kubectl get namespaces
+kubectl get pods
+kubectl get deployments
+kubectl get services
+kubectl get ingress
+kubectl describe pod app-pod
+kubectl logs app-pod
+kubectl delete -f ingress.yaml
+kubectl delete -f service.yaml
+kubectl delete -f pod.yaml
+kubectl delete -f deployment.yaml
+```
+
+## 9. Important Exam Definitions
+
+- **Pod:** The smallest deployable unit in Kubernetes.
+- **Deployment:** Maintains the desired number of application replicas.
+- **Service:** Provides a stable network endpoint for accessing Pods.
+- **NodePort:** Exposes a Service on a port on the Kubernetes nodes.
+- **Ingress:** Routes HTTP or HTTPS requests to Services.
+- **Replica:** An instance of an application managed by a Deployment.
+- **kubectl:** Command-line tool for communicating with Kubernetes.
+
+## 10. Quick Revision
+
+| Resource | YAML kind | Purpose |
+|---|---|---|
+| Deployment | `Deployment` | Manages replicas |
+| Service | `Service` | Exposes Pods |
+| Pod | `Pod` | Runs containers |
+| Ingress | `Ingress` | Routes HTTP/HTTPS traffic |
+
+**Remember:** Apply the Deployment first, then the Service, and then test access. The independent Pod is optional for this example. Ingress requires an Ingress Controller to function.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# KUBERNETES LAB PRACTICAL – 70 VIVA QUESTIONS AND ANSWERS
+
+## PART 1: BASIC KUBERNETES CONCEPTS
+
+**1. What is Kubernetes?**  
+Kubernetes is an open-source container orchestration platform used to deploy, manage, and scale containerized applications.
+
+**2. What is container orchestration?**  
+It is the automated management of containers, including deployment, scaling, networking, and recovery.
+
+**3. What is a container?**  
+A container is a lightweight, isolated environment that runs an application with its dependencies.
+
+**4. What is Docker?**  
+Docker is a platform used to build, package, and run applications in containers.
+
+**5. Difference between Docker and Kubernetes?**  
+Docker builds and runs containers, whereas Kubernetes manages containers across a cluster.
+
+**6. What is a Kubernetes cluster?**  
+A Kubernetes cluster consists of a control plane and worker nodes.
+
+**7. What is a node?**  
+A node is a physical or virtual machine that runs Kubernetes workloads.
+
+**8. What is a Pod?**  
+A Pod is the smallest deployable unit in Kubernetes and contains one or more containers.
+
+**9. What is a namespace?**  
+A namespace logically separates resources within a Kubernetes cluster.
+
+**10. What is kubectl?**  
+kubectl is a command-line tool used to manage Kubernetes resources.
+
+## PART 2: DEPLOYMENT YAML
+
+**11. What is a Deployment?**  
+A Deployment manages application replicas and maintains the desired number of Pods.
+
+**12. Why use Deployment instead of Pod?**  
+Deployment provides replica management, rolling updates, and automatic replacement of failed Pods.
+
+**13. What is apiVersion: apps/v1?**  
+It specifies the Kubernetes API version used for the Deployment resource.
+
+**14. What is kind: Deployment?**  
+It specifies the type of Kubernetes resource being created.
+
+**15. What is metadata?**  
+Metadata contains information such as the resource name and labels.
+
+**16. What is replicas: 2?**  
+It tells Kubernetes to maintain two replicas of the application.
+
+**17. What happens if one Deployment-managed Pod fails?**  
+Kubernetes creates a replacement Pod to maintain the desired replica count.
+
+**18. What is ReplicaSet?**  
+A ReplicaSet ensures that the required number of Pod replicas are running.
+
+**19. What is selector?**  
+A selector identifies Pods using their labels.
+
+**20. What is matchLabels?**  
+It specifies the labels that Pods must have to match the selector.
+
+**21. What is template?**  
+It defines the Pod configuration used by the Deployment to create Pods.
+
+**22. Why are labels used?**  
+Labels identify, organize, and select Kubernetes resources.
+
+**23. What is image: nginx:alpine?**  
+It specifies the Nginx container image based on Alpine Linux.
+
+**24. What is containerPort: 80?**  
+It declares that the container uses port 80. It does not expose the application externally by itself.
+
+## PART 3: SERVICE YAML
+
+**25. What is a Kubernetes Service?**  
+A Service provides a stable network endpoint for accessing Pods.
+
+**26. Why do we need a Service?**  
+Because Pod IP addresses may change, a Service provides stable access to matching Pods.
+
+**27. What is NodePort?**  
+NodePort exposes a Service through a specified port on Kubernetes nodes.
+
+**28. What is port: 80?**  
+It specifies the port exposed by the Service.
+
+**29. What is targetPort: 80?**  
+It specifies the destination port on the Pod.
+
+**30. What is nodePort: 30080?**  
+It exposes the Service through port 30080 on Kubernetes nodes.
+
+**31. Difference between port and targetPort?**  
+port is the Service port, whereas targetPort is the destination Pod port.
+
+**32. What are the types of Kubernetes Services?**  
+ClusterIP, NodePort, LoadBalancer, and ExternalName.
+
+**33. What is ClusterIP?**  
+It exposes a Service internally within the cluster.
+
+**34. What is LoadBalancer?**  
+It requests an external load balancer when supported by the environment.
+
+**35. How does a Service identify Pods?**  
+It uses label selectors such as app: myapp.
+
+**36. What happens if the Service selector does not match any Pods?**  
+The Service has no matching Pod endpoints and cannot forward traffic to the intended application.
+
+## PART 4: POD YAML
+
+**37. What is pod.yaml?**  
+It is a YAML file used to define and create a Pod.
+
+**38. Difference between Pod and Deployment?**  
+A Pod runs containers, whereas a Deployment manages replicas of Pods.
+
+**39. Can a Pod contain multiple containers?**  
+Yes, a Pod can contain one or more containers.
+
+**40. What happens if an independent Pod fails?**  
+Its containers may restart, but Kubernetes does not automatically recreate the standalone Pod if the Pod itself is deleted.
+
+**41. How many Pods are created in our practical?**  
+The Deployment creates two Pods, and pod.yaml creates one independent Pod, giving three Pods in total.
+
+**42. What is the purpose of the containers field?**  
+It defines the containers that run inside a Pod.
+
+**43. How do you check Pod status?**  
+kubectl get pods
+
+**44. How do you view Pod details?**  
+kubectl describe pod app-pod
+
+## PART 5: INGRESS YAML
+
+**45. What is Ingress?**  
+Ingress defines HTTP and HTTPS routing rules to Kubernetes Services.
+
+**46. Why is Ingress used?**  
+It provides hostname-based and path-based routing to applications.
+
+**47. What is ingressClassName: nginx?**  
+It specifies the IngressClass intended to handle the routing rules.
+
+**48. What is host: myapp.local?**  
+It specifies the hostname used to access the application.
+
+**49. What is path: /?**  
+It specifies the root URL path.
+
+**50. What is pathType: Prefix?**  
+It matches requests based on a URL path prefix.
+
+**51. Difference between Service and Ingress?**  
+A Service provides network access to Pods, whereas Ingress defines HTTP/HTTPS routing rules to Services.
+
+**52. Is an Ingress Controller required?**  
+Yes, an Ingress Controller is required to implement the Ingress rules.
+
+## PART 6: KUBERNETES COMMANDS
+
+**53. What does kubectl apply -f deployment.yaml do?**  
+It creates or updates the Deployment defined in the YAML file.
+
+**54. What does kubectl get deployments do?**  
+It lists Deployments in the current namespace.
+
+**55. What does kubectl get pods do?**  
+It lists Pods in the current namespace.
+
+**56. What does kubectl get services do?**  
+It lists Services in the current namespace.
+
+**57. What does kubectl get all do?**  
+It displays common resources such as Pods, Deployments, ReplicaSets, and Services.
+
+**58. What is kubectl describe?**  
+It displays detailed information about a Kubernetes resource.
+
+**59. What is kubectl logs?**  
+It displays container logs.
+
+**60. How do you delete a Deployment?**  
+kubectl delete -f deployment.yaml
+
+**61. What is kubectl get nodes?**  
+It lists the nodes in the Kubernetes cluster.
+
+**62. What is kubectl cluster-info?**  
+It displays information about the Kubernetes cluster control plane and services.
+
+**63. What is kubectl port-forward?**  
+It forwards a local port to a Pod or Service port for accessing an application.
+
+## PART 7: PRACTICAL AND TROUBLESHOOTING
+
+**64. How do you access the Nginx application?**  
+Using the NodePort URL, such as http://localhost:30080, if the Kubernetes environment exposes that port. Alternatively, use kubectl port-forward.
+
+**65. What is ImagePullBackOff?**  
+It means Kubernetes failed to pull a container image and is retrying.
+
+**66. What is CrashLoopBackOff?**  
+It means a container repeatedly starts and exits, causing Kubernetes to delay restart attempts.
+
+**67. What is Pending status?**  
+It means the Pod has not yet been scheduled or cannot proceed to running.
+
+**68. What happens if replicas changes from 2 to 4?**  
+Kubernetes attempts to maintain four application replicas.
+
+**69. What is self-healing in Kubernetes?**  
+Kubernetes controllers automatically take corrective action, such as replacing failed Deployment-managed Pods.
+
+**70. What is scaling in Kubernetes?**  
+Scaling means increasing or decreasing the number of application replicas.
+
+---
+
+## IMPORTANT KUBERNETES COMMANDS FOR VIVA
+
+```bash
+# Check cluster
+kubectl cluster-info
+
+# Check nodes
+kubectl get nodes
+
+# Create Deployment
+kubectl apply -f deployment.yaml
+
+# Check Deployment
+kubectl get deployments
+
+# Check Pods
+kubectl get pods
+
+# Create Service
+kubectl apply -f service.yaml
+
+# Check Services
+kubectl get services
+
+# Create Pod
+kubectl apply -f pod.yaml
+
+# Create Ingress
+kubectl apply -f ingress.yaml
+
+# Check Ingress
+kubectl get ingress
+
+# Check common resources
+kubectl get all
+
+# Detailed Pod information
+kubectl describe pod app-pod
+
+# View Pod logs
+kubectl logs app-pod
+
+# Scale Deployment
+kubectl scale deployment app-deployment --replicas=4
+
+# Port forwarding
+kubectl port-forward service/app-service 8080:80
+
+# Delete resources
+kubectl delete -f deployment.yaml
+kubectl delete -f service.yaml
+kubectl delete -f pod.yaml
+kubectl delete -f ingress.yaml
+```
+
+## LAST-MINUTE REVISION
+
+- Kubernetes = Container orchestration.
+- Docker = Containerization platform.
+- Pod = Smallest deployable Kubernetes unit.
+- Deployment = Manages Pod replicas.
+- ReplicaSet = Maintains the desired number of Pods.
+- Service = Provides stable network access.
+- ClusterIP = Internal Service access.
+- NodePort = Exposes a Service through a node port.
+- LoadBalancer = External load balancing when supported.
+- Ingress = HTTP/HTTPS routing.
+- Namespace = Logical resource separation.
+- kubectl = Kubernetes command-line tool.
+- YAML = Configuration file format.
+- replicas: 2 = Two application replicas.
+- nginx:alpine = Lightweight Nginx image.
+- containerPort: 80 = Container application port.
+- port: 80 = Service port.
+- targetPort: 80 = Destination Pod port.
+- nodePort: 30080 = Port exposed on Kubernetes nodes.
+- kubectl apply = Create or update resources.
+- kubectl get = List resources.
+- kubectl describe = Display resource details.
+- kubectl logs = Display container logs.
+- kubectl delete = Delete resources.
+- kubectl scale = Change replica count.
+- kubectl port-forward = Forward a local port to an application.
+
+**MOST IMPORTANT VIVA TOPICS:** Pod vs Deployment, Service types, labels and selectors, replicas, NodePort, Ingress, Kubernetes vs Docker, and kubectl commands.
+
